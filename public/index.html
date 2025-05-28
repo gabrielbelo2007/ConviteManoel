@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <title>Manoel Goncalves - Meu Aniversário!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Anton&family=Roboto+Mono:wght@400;700&family=Bebas+Neue&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="hero-section">
+      <img src="https://i.imgur.com/afdxqoy.jpeg" style="max-width: 100%; height: auto;">
+    </header>
+
+    <main class="container">
+
+        <section class="tray blue">
+            <div class="tray-content">
+                <h2>DETALHES DA FESTA</h2>
+                <img src="https://i.imgur.com/H2Bm6E7.png" style="max-width: 50%;"> <p><strong>Data:</strong> 19/07/2025</p>
+                <p><strong>Hora:</strong> A partir das 12h</p>
+                <p><strong>Local:</strong> Aver o Mar – Sirinhaém</p>
+                <p><strong>Recomendações:</strong> Levar crianças e roupa de banho!</p>
+                <div class="label price">DIVERSÃO GARANTIDA</div>
+            </div>
+        </section>
+
+        <section class="tray green">
+            <div class="tray-content">
+                <h2>MANOEL GONÇALVES</h2>
+                <p>42 anos de qualidade</p>
+                <p><strong>Data de Fabricação</strong>: 15/07/1983</p>
+                <p><strong>Preço: Inestimável</strong></p>
+                <p><strong>Ingredientes</strong>: Cabuloso, Curioso, Visionário, Teimoso, Arretado, Pertubador, Chato, etc.</p>
+                <p><strong>Data de Validade</strong>: <span>15/07/2023</span></p>
+                <div class="label">EDIÇÃO ESPECIAL</div>
+                <div class="stamp">PRODUTO<br>FORA DA VALIDADE</div>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="form-content">
+                <h2>CONFIRME SUA PRESENÇA</h2>
+                <form id="form-confirmacao">
+                    <label>Nome:
+                        <input name="nome" type="text" required>
+                    </label>
+                    <label>Telefone:
+                        <input name="telefone" type="tel" required>
+                    </label>
+                    <label>E-mail:
+                        <input name="email" type="email" required> </label>
+                    <button type="submit">Confirmar Presença</button>
+                </form>
+                <p id="msg"></p>
+
+                <div class="button-group">
+                    <button id="add-to-calendar" class="add-to-calendar-button">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg" alt="Ícone Google Agenda">
+                        <span>Adicionar à Agenda</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="final-message">
+        <img src="https://i.imgur.com/gDZikuL.png" style="max-width: 85%;">
+    </footer>
+
+    <section class="footer-map">
+        <h2>ONDE NOS ENCONTRAR?</h2>
+        <iframe
+            width="100%"
+            height="300"
+            style="border:0; border-radius: 10px;"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyC3z9JStWHDQ265u0Ow9tePFXj3xEa7nI8&q=-8.668925285339355,-35.07130813598633&zoom=17">
+        </iframe>
+    </section>
+
+    <script>
+      // Função para gerar o link do Google Agenda
+      function generateGoogleCalendarLink(eventName, eventDate, eventTime) {
+          const baseUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE";
+          const details = encodeURIComponent("Venha celebrar meu aniversário! Haverá muita comida, bebida e diversão. Não perca!");
+          const location = encodeURIComponent("Aver o Mar – Sirinhaém");
+
+          // Definir data e hora para o fuso horário de Recife, PE, Brasil (-03:00)
+          // Usaremos as datas ISO formatadas com fuso horário para o Google Agenda entender melhor.
+          // Para um evento que começa "a partir das 12h", vamos usar 12:00 e, por exemplo, 18:00 como fim.
+          const startDateTime = new Date('2025-07-19T12:00:00');
+          const endDateTime = new Date('2025-07-19T18:00:00');
+
+          // Formatar para o formato de fuso horário UTC (Z) que o Google Agenda prefere em links diretos
+          // ou especificar o fuso horário (tzid). Para simplicidade e compatibilidade global, Z (UTC) é comum.
+          // O Google Agenda do usuário ajustará para o fuso horário dele.
+          const formatToGoogleCalendarTime = (date) => {
+              // Pegar componentes da data e hora em Recife (GMT-3)
+              const offset = date.getTimezoneOffset() + (3 * 60); // Ajusta para GMT-3
+              date.setMinutes(date.getMinutes() - offset);
+
+              const year = date.getFullYear();
+              const month = (date.getMonth() + 1).toString().padStart(2, '0');
+              const day = date.getDate().toString().padStart(2, '0');
+              const hours = date.getHours().toString().padStart(2, '0');
+              const minutes = date.getMinutes().toString().padStart(2, '0');
+              const seconds = date.getSeconds().toString().padStart(2, '0');
+              return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+          };
+
+          const dates = `${formatToGoogleCalendarTime(startDateTime)}/${formatToGoogleCalendarTime(endDateTime)}`;
+
+          const link = `${baseUrl}&text=${encodeURIComponent(eventName)}&dates=${dates}&details=${details}&location=${location}&sf=true&output=xml`;
+          return link;
+      }
+
+      // Event listener para o formulário de confirmação
+      document.getElementById('form-confirmacao').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((v, k) => data[k] = v);
+
+        const msgElement = document.getElementById('msg');
+        msgElement.innerText = "Enviando confirmação...";
+
+        // No ambiente local, você não terá a Serverless Function da Vercel rodando.
+        // Simularemos o sucesso para o teste local.
+        setTimeout(() => {
+          msgElement.innerText = "Confirmação simulada com sucesso! (Isso não salvou na planilha ainda, ok?)";
+          this.reset();
+        }, 1500);
+      });
+
+      // Event listener para o novo botão "Adicionar à Agenda"
+      document.getElementById('add-to-calendar').addEventListener('click', function() {
+          const eventName = "Aniversário do Manoel Gonçalves";
+          // Para o link do Google Agenda, a data e hora são passadas diretamente na função `generateGoogleCalendarLink`
+          const calendarLink = generateGoogleCalendarLink(eventName);
+          window.open(calendarLink, '_blank');
+      });
+    </script>
+</body>
+</html>
