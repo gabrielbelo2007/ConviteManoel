@@ -6,11 +6,11 @@ module.exports = async (req, res) => {
     return res.status(405).json({ success: false, message: 'Método não permitido.' });
   }
 
-  // Desestruturar o 'email' junto com nome e telefone
-  const { nome, telefone, email } = req.body;
+  // Desestruturar os novos campos
+  const { nome, telefone, email, possuiFilhos, quantidadeFilhos } = req.body;
 
-  if (!nome || !telefone || !email) { // Adicionar 'email' na validação
-    return res.status(400).json({ success: false, message: 'Nome, telefone e e-mail são obrigatórios.' });
+  if (!nome || !telefone || !email || !possuiFilhos) { // 'quantidadeFilhos' é opcional dependendo de 'possuiFilhos'
+    return res.status(400).json({ success: false, message: 'Nome, telefone, e-mail e "Possui filhos?" são obrigatórios.' });
   }
 
   try {
@@ -25,11 +25,22 @@ module.exports = async (req, res) => {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    // O range agora precisa cobrir a nova coluna de e-mail (ex: A:D se você tiver Nome, Telefone, E-mail, Data)
-    const range = 'Página1!A:D'; // <--- AJUSTE AQUI PARA INCLUIR A NOVA COLUNA DO E-MAIL
+    // AJUSTE AQUI: O range agora precisa cobrir todas as colunas (Nome, Telefone, Email, Possui Filhos?, Quantidade Filhos, Data/Hora)
+    // Se você tiver 6 colunas, será A:F
+    const range = 'Página1!A:F'; // <--- VERIFIQUE E AJUSTE ESTE RANGE CONFORME SUAS COLUNAS NA PLANILHA
 
-    // Adicionar o 'email' aos valores que serão inseridos
-    const values = [[nome, telefone, email, new Date().toLocaleString('pt-BR')]]; // <--- AJUSTE AQUI PARA INCLUIR O E-MAIL
+    // Adicionar os novos campos aos valores que serão inseridos na planilha
+    // O valor de 'quantidadeFilhos' pode ser null/vazio se "Não" for selecionado
+    const finalQuantidadeFilhos = (possuiFilhos === 'Sim') ? quantidadeFilhos : ''; // Envia vazio se não tiver filhos
+
+    const values = [[
+      nome,
+      telefone,
+      email,
+      possuiFilhos,        // Novo campo
+      finalQuantidadeFilhos, // Novo campo
+      new Date().toLocaleString('pt-BR')
+    ]];
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
