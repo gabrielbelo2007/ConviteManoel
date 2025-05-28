@@ -50,7 +50,8 @@
                         <input name="telefone" type="tel" required>
                     </label>
                     <label>E-mail:
-                        <input name="email" type="email" required> </label>
+                        <input name="email" type="email" required>
+                    </label>
                     <button type="submit">Confirmar Presença</button>
                 </form>
                 <p id="msg"></p>
@@ -83,75 +84,102 @@
         </iframe>
     </section>
 
-<script>
-  // Função para gerar o link do Google Agenda (MANTENHA ESTA FUNÇÃO INTACTA)
-  function generateGoogleCalendarLink(eventName, eventDate, eventTime) {
-      const baseUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE";
-      const details = encodeURIComponent("Venha celebrar meu aniversário! Haverá muita comida, bebida e diversão. Não perca!");
-      const location = encodeURIComponent("Aver o Mar – Sirinhaém");
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-      // Definir data e hora para o fuso horário de Recife, PE, Brasil (-03:00)
-      const startDateTime = new Date('2025-07-19T12:00:00');
-      const endDateTime = new Date('2025-07-19T18:00:00');
+    <script>
+      // Função para gerar o link do Google Agenda
+      function generateGoogleCalendarLink(eventName, eventDate, eventTime) {
+          const baseUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE";
+          const details = encodeURIComponent("Venha celebrar meu aniversário! Haverá muita comida, bebida e diversão. Não perca!");
+          const location = encodeURIComponent("Aver o Mar – Sirinhaém");
 
-      const formatToGoogleCalendarTime = (date) => {
-          const year = date.getFullYear();
-          const month = (date.getMonth() + 1).toString().padStart(2, '0');
-          const day = date.getDate().toString().padStart(2, '0');
-          const hours = date.getHours().toString().padStart(2, '0');
-          const minutes = date.getMinutes().toString().padStart(2, '0');
-          const seconds = date.getSeconds().toString().padStart(2, '0');
-          return `<span class="math-inline">\{year\}</span>{month}<span class="math-inline">\{day\}T</span>{hours}<span class="math-inline">\{minutes\}</span>{seconds}`;
-      };
+          const startDateTime = new Date('2025-07-19T12:00:00');
+          const endDateTime = new Date('2025-07-19T18:00:00');
 
-      const dates = `<span class="math-inline">\{formatToGoogleCalendarTime\(startDateTime\)\}/</span>{formatToGoogleCalendarTime(endDateTime)}`;
+          const formatToGoogleCalendarTime = (date) => {
+              const year = date.getFullYear();
+              const month = (date.getMonth() + 1).toString().padStart(2, '0');
+              const day = date.getDate().toString().padStart(2, '0');
+              const hours = date.getHours().toString().padStart(2, '0');
+              const minutes = date.getMinutes().toString().padStart(2, '0');
+              const seconds = date.getSeconds().toString().padStart(2, '0');
+              return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+          };
 
-      const link = `<span class="math-inline">\{baseUrl\}&text\=</span>{encodeURIComponent(eventName)}&dates=<span class="math-inline">\{dates\}&details\=</span>{details}&location=${location}&sf=true&output=xml`;
-      return link;
-  }
+          const dates = `${formatToGoogleCalendarTime(startDateTime)}/${formatToGoogleCalendarTime(endDateTime)}`;
 
-    // Event listener para o formulário de confirmação (ESTE É O BLOCO QUE DEVE SER CORRIGIDO)
-    document.getElementById('form-confirmacao').addEventListener('submit', async function(e) {
+          const link = `${baseUrl}&text=${encodeURIComponent(eventName)}&dates=${dates}&details=${details}&location=${location}&sf=true&output=xml`;
+          return link;
+      }
+
+      // Função para disparar os confetes
+      function triggerConfetti() {
+        // Dispara confetes do centro da tela para cima
+        confetti({
+          particleCount: 100, // Quantidade de confetes
+          spread: 70, // Dispersão dos confetes
+          origin: { y: 0.6 } // Origem vertical (ajuste para sair da região do formulário)
+        });
+
+        // Opcional: para um efeito mais prolongado, dispare algumas vezes
+        setTimeout(() => {
+          confetti({
+            particleCount: 75,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        }, 200);
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            spread: 90,
+            origin: { y: 0.6 }
+          });
+        }, 400);
+      }
+
+
+      // Event listener para o formulário de confirmação
+      document.getElementById('form-confirmacao').addEventListener('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
         const data = {};
         formData.forEach((v, k) => data[k] = v);
 
         const msgElement = document.getElementById('msg');
-        msgElement.innerText = "Enviando confirmação..."; // Mensagem de carregamento
+        msgElement.innerText = "Enviando confirmação...";
 
         try {
-        // Faz a requisição para a sua Serverless Function na Vercel
-        const response = await fetch('/api/submit-form', {
+          const response = await fetch('/api/submit-form', {
             method: 'POST',
             headers: {
-            'Content-Type': 'application/json'
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
-        });
+          });
 
-        const result = await response.json(); // Pega a resposta JSON da sua API
+          const result = await response.json();
 
-        if (response.ok && result.success) { // Verifica se a requisição foi bem-sucedida (status 2xx) E se a API retornou sucesso
+          if (response.ok && result.success) {
             msgElement.innerText = "Presença confirmada na planilha, espero você lá!";
-            this.reset(); // Limpa o formulário apenas em caso de sucesso
-        } else {
-            // Se a requisição falhou (status diferente de 2xx) ou a API retornou sucesso: false
+            this.reset();
+            triggerConfetti(); // Chama a função de confetes aqui!
+          } else {
             msgElement.innerText = `Ocorreu um problema ao confirmar presença: ${result.message || 'Erro desconhecido.'}`;
             console.error('Erro ao confirmar presença:', result.message || 'Erro desconhecido.');
-        }
+          }
         } catch (error) {
-        msgElement.innerText = `Erro na requisição: ${error.message}`;
-        console.error('Erro ao enviar formulário:', error);
+          msgElement.innerText = `Erro na requisição: ${error.message}`;
+          console.error('Erro ao enviar formulário:', error);
         }
-    });
+      });
 
-    // Event listener para o botão "Adicionar à Agenda" (MANTENHA ESTA FUNÇÃO INTACTA)
-    document.getElementById('add-to-calendar').addEventListener('click', function() {
-        const eventName = "Aniversário do Manoel Gonçalves";
-        const calendarLink = generateGoogleCalendarLink(eventName);
-        window.open(calendarLink, '_blank');
-    });
-</script>
+      // Event listener para o botão "Adicionar à Agenda"
+      document.getElementById('add-to-calendar').addEventListener('click', function() {
+          const eventName = "Aniversário do Manoel Gonçalves";
+          const calendarLink = generateGoogleCalendarLink(eventName);
+          window.open(calendarLink, '_blank');
+      });
+    </script>
 </body>
 </html>

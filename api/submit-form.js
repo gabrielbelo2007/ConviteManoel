@@ -6,17 +6,18 @@ module.exports = async (req, res) => {
     return res.status(405).json({ success: false, message: 'Método não permitido.' });
   }
 
-  const { nome, telefone } = req.body;
+  // Desestruturar o 'email' junto com nome e telefone
+  const { nome, telefone, email } = req.body;
 
-  if (!nome || !telefone) {
-    return res.status(400).json({ success: false, message: 'Nome e telefone são obrigatórios.' });
+  if (!nome || !telefone || !email) { // Adicionar 'email' na validação
+    return res.status(400).json({ success: false, message: 'Nome, telefone e e-mail são obrigatórios.' });
   }
 
   try {
     const auth = new GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // Substitui \\n por quebra de linha real
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       },
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
@@ -24,8 +25,11 @@ module.exports = async (req, res) => {
     const sheets = google.sheets({ version: 'v4', auth });
 
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-    const range = 'Página1!A:C'; // Onde "Página1" é o nome da sua aba na planilha
-    const values = [[nome, telefone, new Date().toLocaleString('pt-BR')]]; // Adiciona nome, telefone e data/hora
+    // O range agora precisa cobrir a nova coluna de e-mail (ex: A:D se você tiver Nome, Telefone, E-mail, Data)
+    const range = 'Página1!A:D'; // <--- AJUSTE AQUI PARA INCLUIR A NOVA COLUNA DO E-MAIL
+
+    // Adicionar o 'email' aos valores que serão inseridos
+    const values = [[nome, telefone, email, new Date().toLocaleString('pt-BR')]]; // <--- AJUSTE AQUI PARA INCLUIR O E-MAIL
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
